@@ -1,8 +1,30 @@
 from can import Message
+import json
+
+# load IDs from a file
+def load_config(path: str = "docs/ids.json") -> dict:
+
+    # open the file
+    try:
+        f = open(path)
+    except:
+        raise FileNotFoundError("Configuration file not found!")
+    
+    # read the file JSON
+    raw_json = f.read()
+
+    # parse the JSON
+    try:
+        config = json.loads(raw_json)
+    except:
+        raise ValueError("Invalid JSON file encoding!")
+    
+    return config
+
 
 # extract a value from a message
 # the tuple are the starting and ending bytes of the value
-def extract_value_from_msg(message: Message, byte_range: tuple):
+def extract_value_from_msg(message: Message, byte_range: tuple) -> int:
     
     # verify the range
     if byte_range[0] > byte_range[1]:
