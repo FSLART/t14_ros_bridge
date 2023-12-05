@@ -1,5 +1,5 @@
 from can import Bus
-from utils import load_config, handle_message
+from t14_ros_bridge.utils import load_config, handle_message
 
 # load the configs
 var_to_can, id_to_vars = load_config()
