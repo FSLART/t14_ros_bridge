@@ -1,12 +1,13 @@
 from can import Message
 import json
+from ament_index_python.packages import get_package_share_directory
 
 # load IDs from a file
 def load_config(path: str = "docs/ids.json"):
 
     # open the file
     try:
-        f = open(path)
+        f = open(get_package_share_directory('t14_ros_bridge') + "/" + path, "r")
     except:
         raise FileNotFoundError("Configuration file not found!")
     
