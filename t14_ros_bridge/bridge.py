@@ -9,6 +9,7 @@ from can import Bus, ThreadSafeBus
 from . utils import load_config, handle_message
 
 import threading
+import math
 
 class Bridge(Node):
 
@@ -18,7 +19,7 @@ class Bridge(Node):
         # declare the parameters
         self.declare_parameter("can_channel", "can0")
         self.declare_parameter("can_bustype", "socketcan")
-        self.declare_parameter("read_period", 0.05) # can reading period in seconds
+        self.declare_parameter("read_period", 0.005) # can reading period in seconds
         self.declare_parameter("config_path", "docs/ids.json")
         
         # create the publishers
@@ -33,9 +34,15 @@ class Bridge(Node):
         self.config_path = self.get_parameter("config_path").get_parameter_value().string_value
         self.var_to_can, self.id_to_vars = load_config(self.config_path)
 
+        # create filters for the CAN messages
+        self.filters = []
+        for var in self.var_to_can:
+            id = int(self.var_to_can[var]['ID'], 16)
+            self.filters.append({"can_id": id, "can_mask": id})
+
         # define the bus
         try:
-            self.bus = Bus(channel=self.get_parameter("can_channel").value, bustype=self.get_parameter("can_bustype").value)
+            self.bus = Bus(channel=self.get_parameter("can_channel").value, bustype=self.get_parameter("can_bustype").value, filters=self.filters)
         except:
             raise ConnectionError("Could not connect to CAN bus!")
         
@@ -61,25 +68,25 @@ class Bridge(Node):
             self.drive_speed_sub.publish(drive_msg)
 
         # publish the ground speed
-        if var['name'] == "GND_SPEED":
+        elif var['name'] == "GND_SPEED":
             gnd_msg = Float32()
             gnd_msg.data = float(var['value'])
             self.gnd_speed_sub.publish(gnd_msg)
 
         # publish the right wheel speed
-        if var['name'] == "RIGHT_DRIVE_SPEED" or var['name'] == "RIGHT_GROUND_SPEED":
+        elif var['name'] == "RIGHT_DRIVE_SPEED" or var['name'] == "RIGHT_GROUND_SPEED":
             right_msg = Float32()
             right_msg.data = float(var['value'])
             self.right_wheel_sub.publish(right_msg)
 
         # publish the left wheel speed
-        if var['name'] == "LEFT_DRIVE_SPEED" or var['name'] == "LEFT_GROUND_SPEED":
+        elif var['name'] == "LEFT_DRIVE_SPEED" or var['name'] == "LEFT_GROUND_SPEED":
             left_msg = Float32()
             left_msg.data = float(var['value'])
             self.left_wheel_sub.publish(left_msg)
 
         # publish the steering angle
-        if var['name'] == "STEERING_POS":
+        elif var['name'] == "STEERING_POS":
             steering_msg = Float32()
             steering_msg.data = float(var['value'])
             self.steering_pub.publish(steering_msg)
@@ -91,6 +98,7 @@ class Bridge(Node):
         while True:
             msg = self.bus.recv(0.0)
 
+            # stop when the buffer is already empty
             if msg is None:
                 break
 
@@ -102,17 +110,37 @@ class Bridge(Node):
                 print(values)
             """
 
-            threads = []
-
             # publish the values
             for var in values:
-                t = threading.Thread(target=self.val_reading_routine, args=(var,))
-                threads.append(t)
-                t.start()
+                # publish the drive speed as redundancy
+                if var['name'] == "DRIVE_SPEED":
+                    drive_msg = Float32()
+                    drive_msg.data = float(var['value'])
+                    self.drive_speed_sub.publish(drive_msg)
 
-            for t in threads:
-                t.join()
+                # publish the ground speed
+                elif var['name'] == "GND_SPEED":
+                    gnd_msg = Float32()
+                    gnd_msg.data = float(var['value'])
+                    self.gnd_speed_sub.publish(gnd_msg)
 
+                # publish the right wheel speed
+                elif var['name'] == "RIGHT_DRIVE_SPEED" or var['name'] == "RIGHT_GROUND_SPEED":
+                    right_msg = Float32()
+                    right_msg.data = float(var['value'])
+                    self.right_wheel_sub.publish(right_msg)
+
+                # publish the left wheel speed
+                elif var['name'] == "LEFT_DRIVE_SPEED" or var['name'] == "LEFT_GROUND_SPEED":
+                    left_msg = Float32()
+                    left_msg.data = float(var['value'])
+                    self.left_wheel_sub.publish(left_msg)
+
+                # publish the steering angle
+                elif var['name'] == "STEERING_POS":
+                    steering_msg = Float32()
+                    steering_msg.data = float(var['value'])
+                    self.steering_pub.publish(steering_msg)
             
     
 def main(args=None):

@@ -1,6 +1,7 @@
 from can import Message
 import json
 from ament_index_python.packages import get_package_share_directory
+import threading
 
 # load IDs from a file
 def load_config(path: str = "docs/ids.json"):
@@ -53,13 +54,15 @@ def extract_value_from_msg(message: Message, byte_range: tuple) -> int:
 # handle an incoming message
 # receives the message, a mapping of IDs to variable names, and a mapping of variable names to CAN IDs and bytes
 def handle_message(message: Message, id_to_vars: dict, var_to_can: dict) -> list:
+
+    id_hex = hex(message.arbitration_id)
     
     # if the ID is not used by any variable, discard it
-    if not hex(message.arbitration_id) in id_to_vars:
+    if not id_hex in id_to_vars:
         return []
     
     # get the variable names that use this ID
-    variables = id_to_vars[hex(message.arbitration_id)]
+    variables = id_to_vars[id_hex]
 
     # extract each of the variables to a list
     values = []
