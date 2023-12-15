@@ -1,0 +1,42 @@
+{
+    "GND_SPEED": {
+        "ID": "0x61",
+        "bytes": [0, 1]
+    },
+    "BRAKE_PRESS_FRONT": {
+        "ID": "0x61",
+        "bytes": [4,5]
+    },
+    "BRAKE_PRESS_REAR": {
+        "ID": "0x61",
+        "bytes": [6,7]
+    },
+    "DRIVE_SPEED": {
+        "ID": "0x64",
+        "bytes": [2,3]
+    },
+    "RIGHT_DRIVE_SPEED": {
+        "ID": "0x64",
+        "bytes": [4,5]
+    },
+    "LEFT_DRIVE_SPEED": {
+        "ID": "0x64",
+        "bytes": [6,7]
+    },
+    "RIGHT_GROUND_SPEED": {
+        "ID": "0x65",
+        "bytes": [0,1]
+    },
+    "LEFT_GROUND_SPEED": {
+        "ID": "0x65",
+        "bytes": [2,3]
+    },
+    "WHEEL_SLIP": {
+        "ID": "0x65",
+        "bytes": [4,5]
+    },
+    "STEERING_POS": {
+        "ID": "0x6D",
+        "bytes": [2,3]
+    }
+}
