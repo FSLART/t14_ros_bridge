@@ -4,9 +4,11 @@ from rclpy.node import Node
 from std_msgs.msg import Float32
 from ackermann_msgs.msg import AckermannDriveStamped
 
-from can import Bus
+from can import Bus, ThreadSafeBus
 
 from . utils import load_config, handle_message
+
+import threading
 
 class Bridge(Node):
 
@@ -16,7 +18,7 @@ class Bridge(Node):
         # declare the parameters
         self.declare_parameter("can_channel", "can0")
         self.declare_parameter("can_bustype", "socketcan")
-        self.declare_parameter("read_period", 0.02) # can reading period in seconds
+        self.declare_parameter("read_period", 0.05) # can reading period in seconds
         self.declare_parameter("config_path", "docs/ids.json")
         
         # create the publishers
@@ -25,6 +27,7 @@ class Bridge(Node):
         self.left_wheel_sub = self.create_publisher(Float32, 'left_wheels_speed', 10)
         self.drive_speed_sub = self.create_publisher(Float32, 'drive_speed', 10)
         self.gnd_speed_sub = self.create_publisher(Float32, 'gnd_speed', 10)
+        self.steering_pub = self.create_publisher(Float32, 'steering_angle', 10)
 
         # load the CAN configs
         self.config_path = self.get_parameter("config_path").get_parameter_value().string_value
@@ -40,45 +43,77 @@ class Bridge(Node):
         self.period = self.get_parameter("read_period").value
         self.timer = self.create_timer(self.period, self.timer_callback)
 
-    def timer_callback(self):
+    def val_reading_routine(self, var):
 
-        # read a message
-        msg = self.bus.recv()
-
-        # handle the received message
-        values = handle_message(msg, self.id_to_vars, self.var_to_can)
-
-        # publish the values
         # publish the ackermann msg
-        if "GND_SPEED" in values and "STEERING_POS" in values:
+        """
+        if var['name'] == "GND_SPEED" and "STEERING_POS" in values:
             ack_msg = AckermannDriveStamped()
             ack_msg.drive.steering_angle = values["STEERING_POS"]
             ack_msg.drive.speed = values["GND_SPEED"]
             self.ackermann_pub.publish(ack_msg)
+        """
 
         # publish the drive speed as redundancy
-        if "DRIVE_SPEED" in values:
+        if var['name'] == "DRIVE_SPEED":
             drive_msg = Float32()
-            drive_msg.data = values["DRIVE_SPEED"]
+            drive_msg.data = float(var['value'])
             self.drive_speed_sub.publish(drive_msg)
 
         # publish the ground speed
-        if "GND_SPEED" in values:
+        if var['name'] == "GND_SPEED":
             gnd_msg = Float32()
-            gnd_msg.data = values["GND_SPEED"]
+            gnd_msg.data = float(var['value'])
             self.gnd_speed_sub.publish(gnd_msg)
 
         # publish the right wheel speed
-        if "RIGHT_DRIVE_SPEED" in values:
+        if var['name'] == "RIGHT_DRIVE_SPEED" or var['name'] == "RIGHT_GROUND_SPEED":
             right_msg = Float32()
-            right_msg.data = values["RIGHT_DRIVE_SPEED"]
+            right_msg.data = float(var['value'])
             self.right_wheel_sub.publish(right_msg)
 
         # publish the left wheel speed
-        if "LEFT_DRIVE_SPEED" in values:
+        if var['name'] == "LEFT_DRIVE_SPEED" or var['name'] == "LEFT_GROUND_SPEED":
             left_msg = Float32()
-            left_msg.data = values["LEFT_DRIVE_SPEED"]
+            left_msg.data = float(var['value'])
             self.left_wheel_sub.publish(left_msg)
+
+        # publish the steering angle
+        if var['name'] == "STEERING_POS":
+            steering_msg = Float32()
+            steering_msg.data = float(var['value'])
+            self.steering_pub.publish(steering_msg)
+
+
+    def timer_callback(self):
+
+        # read a message without blocking
+        while True:
+            msg = self.bus.recv(0.0)
+
+            if msg is None:
+                break
+
+            # handle the received message
+            values = handle_message(msg, self.id_to_vars, self.var_to_can)
+
+            """
+            if len(values) > 0:
+                print(values)
+            """
+
+            threads = []
+
+            # publish the values
+            for var in values:
+                t = threading.Thread(target=self.val_reading_routine, args=(var,))
+                threads.append(t)
+                t.start()
+
+            for t in threads:
+                t.join()
+
+            
     
 def main(args=None):
     rclpy.init(args=args)
