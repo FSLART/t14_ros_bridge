@@ -1,4 +1,16 @@
 {
+    "WSPD_RL": {
+        "ID": "0x80",
+        "bytes": [0],
+        "scale": 1,
+        "offset": 0
+    },
+    "WSPD_RR": {
+        "ID": "0x80",
+        "bytes": [1],
+        "scale": 1,
+        "offset": 0
+    },
     "GND_SPEED": {
         "ID": "0x61",
         "bytes": [0, 1]
