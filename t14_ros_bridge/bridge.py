@@ -23,6 +23,8 @@ class Bridge(Node):
         self.declare_parameter("config_path", "docs/ids.json")
         
         # create the publishers
+        self.wspd_rl_pub = self.create_publisher(Float32, 'rear_left_wheel_speed', 10)
+        self.wspd_rr_pub = self.create_publisher(Float32, 'rear_right_wheel_speed', 10)
         self.ackermann_pub = self.create_publisher(AckermannDriveStamped, 'ackermann', 10)
         self.right_wheel_sub = self.create_publisher(Float32, 'right_wheels_speed', 10)
         self.left_wheel_sub = self.create_publisher(Float32, 'left_wheels_speed', 10)
@@ -60,6 +62,16 @@ class Bridge(Node):
             ack_msg.drive.speed = values["GND_SPEED"]
             self.ackermann_pub.publish(ack_msg)
         """
+
+        if var['name'] == "WSPD_RL":
+            wspd_rl_msg = Float32()
+            wspd_rl_msg.data = float(var['value'])
+            self.wspd_rl_pub.publish(wspd_rl_msg)
+
+        elif var['name'] == "WSPD_RR":
+            wspd_rr_msg = Float32()
+            wspd_rr_msg.data = float(var['value'])
+            self.wspd_rr_pub.publish(wspd_rr_msg)
 
         # publish the drive speed as redundancy
         if var['name'] == "DRIVE_SPEED":

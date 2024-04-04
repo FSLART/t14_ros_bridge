@@ -1,0 +1,4 @@
+<launch>
+  <node pkg="t14_ros_bridge" exec="bridge" output="screen" />
+  <node pkg="foxglove_bridge" exec="foxglove_bridge" output="screen" />
+</launch>

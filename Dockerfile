@@ -18,4 +18,4 @@ WORKDIR /app
 RUN /bin/bash -c "source /opt/ros/humble/setup.bash && cd /app && colcon build"
 
 # run the bridge
-CMD /bin/bash -c "source /app/install/setup.bash && ros2 run t14_ros_bridge bridge"
+CMD /bin/bash -c "source /app/install/setup.bash && ros2 launch t14_ros_bridge t14_bridge.launch.xml"
