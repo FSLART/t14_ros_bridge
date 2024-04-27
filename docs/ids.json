@@ -13,42 +13,62 @@
     },
     "GND_SPEED": {
         "ID": "0x61",
-        "bytes": [0, 1]
+        "bytes": [0, 1],
+        "scale": 1,
+        "offset": 0
     },
     "BRAKE_PRESS_FRONT": {
         "ID": "0x61",
-        "bytes": [4,5]
+        "bytes": [4,5],
+        "scale": 1,
+        "offset": 0
     },
     "BRAKE_PRESS_REAR": {
         "ID": "0x61",
-        "bytes": [6,7]
+        "bytes": [6,7],
+        "scale": 1,
+        "offset": 0
     },
     "DRIVE_SPEED": {
         "ID": "0x64",
-        "bytes": [2,3]
+        "bytes": [2,3],
+        "scale": 1,
+        "offset": 0
     },
     "RIGHT_DRIVE_SPEED": {
         "ID": "0x64",
-        "bytes": [4,5]
+        "bytes": [4,5],
+        "scale": 1,
+        "offset": 0
     },
     "LEFT_DRIVE_SPEED": {
         "ID": "0x64",
-        "bytes": [6,7]
+        "bytes": [6,7],
+        "scale": 1,
+        "offset": 0
     },
     "RIGHT_GROUND_SPEED": {
         "ID": "0x65",
-        "bytes": [0,1]
+        "bytes": [0,1],
+        "scale": 1,
+        "offset": 0
     },
     "LEFT_GROUND_SPEED": {
         "ID": "0x65",
-        "bytes": [2,3]
+        "bytes": [2,3],
+        "scale": 1,
+        "offset": 0
     },
     "WHEEL_SLIP": {
         "ID": "0x65",
-        "bytes": [4,5]
+        "bytes": [4,5],
+        "scale": 1,
+        "offset": 0
     },
     "STEERING_POS": {
-        "ID": "0x6D",
-        "bytes": [2,3]
+        "ID": "0x200",
+        "bytes": [0,1],
+        "scale": 0.01,
+        "offset": -20
     }
 }
