@@ -65,41 +65,48 @@ class Bridge(Node):
 
         if var['name'] == "WSPD_RL":
             wspd_rl_msg = Float32()
+            wspd_rl_msg.header.stamp = self.get_clock().now().to_msg()
             wspd_rl_msg.data = float(var['value'])
             self.wspd_rl_pub.publish(wspd_rl_msg)
 
         elif var['name'] == "WSPD_RR":
             wspd_rr_msg = Float32()
+            wspd_rr_msg.header.stamp = self.get_clock().now().to_msg()
             wspd_rr_msg.data = float(var['value'])
             self.wspd_rr_pub.publish(wspd_rr_msg)
 
         # publish the drive speed as redundancy
         if var['name'] == "DRIVE_SPEED":
             drive_msg = Float32()
+            drive_msg.header.stamp = self.get_clock().now().to_msg()
             drive_msg.data = float(var['value'])
             self.drive_speed_sub.publish(drive_msg)
 
         # publish the ground speed
         elif var['name'] == "GND_SPEED":
             gnd_msg = Float32()
+            gnd_msg.header.stamp = self.get_clock().now().to_msg()
             gnd_msg.data = float(var['value'])
             self.gnd_speed_sub.publish(gnd_msg)
 
         # publish the right wheel speed
         elif var['name'] == "RIGHT_DRIVE_SPEED" or var['name'] == "RIGHT_GROUND_SPEED":
             right_msg = Float32()
+            right_msg.header.stamp = self.get_clock().now().to_msg()
             right_msg.data = float(var['value'])
             self.right_wheel_sub.publish(right_msg)
 
         # publish the left wheel speed
         elif var['name'] == "LEFT_DRIVE_SPEED" or var['name'] == "LEFT_GROUND_SPEED":
             left_msg = Float32()
+            left_msg.header.stamp = self.get_clock().now().to_msg()
             left_msg.data = float(var['value'])
             self.left_wheel_sub.publish(left_msg)
 
         # publish the steering angle
         elif var['name'] == "STEERING_POS":
             steering_msg = Float32()
+            steering_msg.header.stamp = self.get_clock().now().to_msg()
             steering_msg.data = float(var['value'])
             self.steering_pub.publish(steering_msg)
 
