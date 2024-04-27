@@ -80,7 +80,6 @@ class Bridge(Node):
                 pub = self.pubs.get(var['name'], None)
                 if pub is not None:
                     msg = Float32()
-                    msg.header.stamp = self.get_clock().now().to_msg()
                     msg.data = val
                     pub.publish(msg)
     
