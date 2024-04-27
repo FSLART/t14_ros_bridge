@@ -23,14 +23,15 @@ class Bridge(Node):
         self.declare_parameter("config_path", "docs/ids.json")
         
         # create the publishers
-        self.wspd_rl_pub = self.create_publisher(Float32, 'rear_left_wheel_speed', 10)
-        self.wspd_rr_pub = self.create_publisher(Float32, 'rear_right_wheel_speed', 10)
-        self.ackermann_pub = self.create_publisher(AckermannDriveStamped, 'ackermann', 10)
-        self.right_wheel_sub = self.create_publisher(Float32, 'right_wheels_speed', 10)
-        self.left_wheel_sub = self.create_publisher(Float32, 'left_wheels_speed', 10)
-        self.drive_speed_sub = self.create_publisher(Float32, 'drive_speed', 10)
-        self.gnd_speed_sub = self.create_publisher(Float32, 'gnd_speed', 10)
+        self.drive_speed_pub = self.create_publisher(Float32, 'drive_speed', 10)
+        self.gnd_speed_pub = self.create_publisher(Float32, 'gnd_speed', 10)
         self.steering_pub = self.create_publisher(Float32, 'steering_angle', 10)
+
+        self.pubs = {
+            "STEERING_POS": self.steering_pub,
+            "GND_SPEED": self.gnd_speed_pub,
+            "DRIVE_SPEED": self.drive_speed_pub 
+        }
 
         # load the CAN configs
         self.config_path = self.get_parameter("config_path").get_parameter_value().string_value
@@ -52,64 +53,6 @@ class Bridge(Node):
         self.period = self.get_parameter("read_period").value
         self.timer = self.create_timer(self.period, self.timer_callback)
 
-    def val_reading_routine(self, var):
-
-        # publish the ackermann msg
-        """
-        if var['name'] == "GND_SPEED" and "STEERING_POS" in values:
-            ack_msg = AckermannDriveStamped()
-            ack_msg.drive.steering_angle = values["STEERING_POS"]
-            ack_msg.drive.speed = values["GND_SPEED"]
-            self.ackermann_pub.publish(ack_msg)
-        """
-
-        if var['name'] == "WSPD_RL":
-            wspd_rl_msg = Float32()
-            wspd_rl_msg.header.stamp = self.get_clock().now().to_msg()
-            wspd_rl_msg.data = float(var['value'])
-            self.wspd_rl_pub.publish(wspd_rl_msg)
-
-        elif var['name'] == "WSPD_RR":
-            wspd_rr_msg = Float32()
-            wspd_rr_msg.header.stamp = self.get_clock().now().to_msg()
-            wspd_rr_msg.data = float(var['value'])
-            self.wspd_rr_pub.publish(wspd_rr_msg)
-
-        # publish the drive speed as redundancy
-        if var['name'] == "DRIVE_SPEED":
-            drive_msg = Float32()
-            drive_msg.header.stamp = self.get_clock().now().to_msg()
-            drive_msg.data = float(var['value'])
-            self.drive_speed_sub.publish(drive_msg)
-
-        # publish the ground speed
-        elif var['name'] == "GND_SPEED":
-            gnd_msg = Float32()
-            gnd_msg.header.stamp = self.get_clock().now().to_msg()
-            gnd_msg.data = float(var['value'])
-            self.gnd_speed_sub.publish(gnd_msg)
-
-        # publish the right wheel speed
-        elif var['name'] == "RIGHT_DRIVE_SPEED" or var['name'] == "RIGHT_GROUND_SPEED":
-            right_msg = Float32()
-            right_msg.header.stamp = self.get_clock().now().to_msg()
-            right_msg.data = float(var['value'])
-            self.right_wheel_sub.publish(right_msg)
-
-        # publish the left wheel speed
-        elif var['name'] == "LEFT_DRIVE_SPEED" or var['name'] == "LEFT_GROUND_SPEED":
-            left_msg = Float32()
-            left_msg.header.stamp = self.get_clock().now().to_msg()
-            left_msg.data = float(var['value'])
-            self.left_wheel_sub.publish(left_msg)
-
-        # publish the steering angle
-        elif var['name'] == "STEERING_POS":
-            steering_msg = Float32()
-            steering_msg.header.stamp = self.get_clock().now().to_msg()
-            steering_msg.data = float(var['value'])
-            self.steering_pub.publish(steering_msg)
-
 
     def timer_callback(self):
 
@@ -124,43 +67,22 @@ class Bridge(Node):
             # handle the received message
             values = handle_message(msg, self.id_to_vars, self.var_to_can)
 
-            """
-            if len(values) > 0:
-                print(values)
-            """
-
             # publish the values
             for var in values:
-                # publish the drive speed as redundancy
-                if var['name'] == "DRIVE_SPEED":
-                    drive_msg = Float32()
-                    drive_msg.data = float(var['value'])
-                    self.drive_speed_sub.publish(drive_msg)
 
-                # publish the ground speed
-                elif var['name'] == "GND_SPEED":
-                    gnd_msg = Float32()
-                    gnd_msg.data = float(var['value'])
-                    self.gnd_speed_sub.publish(gnd_msg)
+                val = var['value']
+                if val is None:
+                    continue
+                val = float(val)
+                # apply the scale and offset
+                val = (val * float(var['scale'])) + float(var['offset'])
 
-                # publish the right wheel speed
-                elif var['name'] == "RIGHT_DRIVE_SPEED" or var['name'] == "RIGHT_GROUND_SPEED":
-                    right_msg = Float32()
-                    right_msg.data = float(var['value'])
-                    self.right_wheel_sub.publish(right_msg)
-
-                # publish the left wheel speed
-                elif var['name'] == "LEFT_DRIVE_SPEED" or var['name'] == "LEFT_GROUND_SPEED":
-                    left_msg = Float32()
-                    left_msg.data = float(var['value'])
-                    self.left_wheel_sub.publish(left_msg)
-
-                # publish the steering angle
-                elif var['name'] == "STEERING_POS":
-                    steering_msg = Float32()
-                    steering_msg.data = float(var['value'])
-                    self.steering_pub.publish(steering_msg)
-            
+                pub = self.pubs.get(var['name'], None)
+                if pub is not None:
+                    msg = Float32()
+                    msg.header.stamp = self.get_clock().now().to_msg()
+                    msg.data = val
+                    pub.publish(msg)
     
 def main(args=None):
     rclpy.init(args=args)
