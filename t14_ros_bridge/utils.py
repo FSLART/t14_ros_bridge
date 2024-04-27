@@ -69,7 +69,9 @@ def handle_message(message: Message, id_to_vars: dict, var_to_can: dict) -> list
     for var in variables:
         new_val = {
             'name': var,
-            'value': extract_value_from_msg(message, tuple(var_to_can[var]['bytes']))
+            'value': extract_value_from_msg(message, tuple(var_to_can[var]['bytes'])),
+            'scale': var_to_can[var]['scale'],
+            'offset': var_to_can[var]['offset']
         }
         values.append(new_val)
 
